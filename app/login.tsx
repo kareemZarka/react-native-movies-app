@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
     View,
     TextInput,
@@ -17,6 +17,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { images } from '@/constants/images';
 import { icons } from '@/constants/icons';
 
+type Status = {
+    type: '' | 'error' | 'success';
+    message: string;
+};
+
 const Login = () => {
     const { signIn, signUp, user } = useAuth();
     const router = useRouter();
@@ -25,8 +30,7 @@ const Login = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+    const [status, setStatus] = useState<Status>({ type: '', message: '' });
 
     const authMutation = useMutation({
         mutationFn: async () => {
@@ -38,7 +42,7 @@ const Login = () => {
         },
         onSuccess: () => {
             if (mode === 'register') {
-                setSuccess('Account created successfully 🎉');
+                setStatus({ type: 'success', message: 'Account created successfully 🎉' });
             }
             router.replace('/');
         },
@@ -55,26 +59,34 @@ const Login = () => {
                 displayMessage = 'Invalid email or password.';
             }
 
-            setSuccess('');
-            setError(displayMessage);
+            setStatus({ type: 'error', message: displayMessage });
         },
     });
 
-    if (user) return <Redirect href="/" />;
+    // Auto-clear success after 3s
+    useEffect(() => {
+        if (status.type === 'success') {
+            const t = setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+            return () => clearTimeout(t);
+        }
+    }, [status]);
 
-    const toggleMode = () => {
-        setError('');
-        setSuccess('');
-        setMode(mode === 'login' ? 'register' : 'login');
-    };
+    const toggleMode = useCallback(() => {
+        setStatus({ type: '', message: '' });
+        setMode((prev) => (prev === 'login' ? 'register' : 'login'));
+    }, []);
 
-    const handleAuth = () => {
-        setError('');
-        setSuccess('');
+    const handleAuth = useCallback(() => {
+        setStatus({ type: '', message: '' });
         authMutation.mutate();
-    };
+    }, [authMutation]);
 
-    const loading = authMutation.isPending;
+    // Precompute error flags (avoids repeated string ops in render)
+    const errorLower = status.type === 'error' ? status.message.toLowerCase() : '';
+    const emailError = errorLower.includes('email');
+    const passwordError = errorLower.includes('password');
+
+    if (user) return <Redirect href="/" />;
 
     return (
         <SafeAreaView className="flex-1 bg-primary">
@@ -106,6 +118,7 @@ const Login = () => {
                                 className="bg-gray-800 text-white px-4 py-3 rounded-md"
                             />
                         )}
+
                         <TextInput
                             placeholder="Email"
                             placeholderTextColor="#888"
@@ -114,9 +127,10 @@ const Login = () => {
                             autoCapitalize="none"
                             keyboardType="email-address"
                             className={`bg-gray-800 text-white px-4 py-3 rounded-md ${
-                                error.toLowerCase().includes('email') ? 'border border-red-500' : ''
+                                emailError ? 'border border-red-500' : ''
                             }`}
                         />
+
                         <TextInput
                             placeholder="Password"
                             placeholderTextColor="#888"
@@ -124,25 +138,25 @@ const Login = () => {
                             value={password}
                             onChangeText={setPassword}
                             className={`bg-gray-800 text-white px-4 py-3 rounded-md ${
-                                error.toLowerCase().includes('password') ? 'border border-red-500' : ''
+                                passwordError ? 'border border-red-500' : ''
                             }`}
                         />
 
-                        {error ? (
-                            <Text className="text-red-500 text-center">{error}</Text>
-                        ) : null}
-                        {success ? (
-                            <Text className="text-green-500 text-center">{success}</Text>
-                        ) : null}
+                        {status.type === 'error' && (
+                            <Text className="text-red-500 text-center">{status.message}</Text>
+                        )}
+                        {status.type === 'success' && (
+                            <Text className="text-green-500 text-center">{status.message}</Text>
+                        )}
 
                         <TouchableOpacity
                             onPress={handleAuth}
-                            disabled={loading}
+                            disabled={authMutation.isPending}
                             className={`py-3 rounded-full shadow-lg ${
-                                loading ? 'bg-accent/60' : 'bg-accent'
+                                authMutation.isPending ? 'bg-accent/60' : 'bg-accent'
                             }`}
                         >
-                            {loading ? (
+                            {authMutation.isPending ? (
                                 <ActivityIndicator color="#030014" />
                             ) : (
                                 <Text className="text-primary text-center font-semibold">
