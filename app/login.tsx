@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Redirect, useRouter } from 'expo-router';
+import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { images } from '@/constants/images';
 import { icons } from '@/constants/icons';
@@ -24,28 +25,22 @@ const Login = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  if (user) return <Redirect href="/" />;
-
-  const toggleMode = () => {
-    setError('');
-    setMode(mode === 'login' ? 'register' : 'login');
-  };
-
-  const handleAuth = async () => {
-    try {
-      setLoading(true);
-      setError('');
+  const authMutation = useMutation({
+    mutationFn: async () => {
       if (mode === 'login') {
         await signIn(email, password);
       } else {
         await signUp(email, password, name);
+      }
+    },
+    onSuccess: () => {
+      if (mode === 'register') {
         Alert.alert('Success', 'Account created successfully');
       }
       router.replace('/');
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       const rawMessage = err?.message || 'Something went wrong';
       let displayMessage = rawMessage;
       if (err.code === 409) {
@@ -58,10 +53,22 @@ const Login = () => {
       }
       setError(displayMessage);
       Alert.alert('Error', displayMessage);
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  if (user) return <Redirect href="/" />;
+
+  const toggleMode = () => {
+    setError('');
+    setMode(mode === 'login' ? 'register' : 'login');
   };
+
+  const handleAuth = () => {
+    setError('');
+    authMutation.mutate();
+  };
+
+  const loading = authMutation.isPending;
 
   return (
     <SafeAreaView className="flex-1 bg-primary">
