@@ -46,14 +46,18 @@ const Login = () => {
       }
       router.replace('/');
     } catch (err: any) {
-      const message = err?.message || 'Something went wrong';
+      const rawMessage = err?.message || 'Something went wrong';
+      let displayMessage = rawMessage;
       if (err.code === 409) {
-        setError('Account already exists. Please login.');
-      } else if (err.code === 401 || message.toLowerCase().includes('invalid')) {
-        setError('Invalid email or password.');
-      } else {
-        setError(message);
+        displayMessage = 'Account already exists. Please login.';
+      } else if (
+        err.code === 401 ||
+        rawMessage.toLowerCase().includes('invalid')
+      ) {
+        displayMessage = 'Invalid email or password.';
       }
+      setError(displayMessage);
+      Alert.alert('Error', displayMessage);
     } finally {
       setLoading(false);
     }
@@ -112,18 +116,20 @@ const Login = () => {
             <TouchableOpacity
               onPress={handleAuth}
               disabled={loading}
-              className="bg-secondary py-3 rounded-md"
+              className={`py-3 rounded-full shadow-lg ${
+                loading ? 'bg-accent/60' : 'bg-accent'
+              }`}
             >
               {loading ? (
-                <ActivityIndicator color="#151312" />
+                <ActivityIndicator color="#030014" />
               ) : (
                 <Text className="text-primary text-center font-semibold">
                   {mode === 'login' ? 'Login' : 'Register'}
                 </Text>
               )}
             </TouchableOpacity>
-            <TouchableOpacity onPress={toggleMode}>
-              <Text className="text-center text-gray-500">
+            <TouchableOpacity onPress={toggleMode} className="mt-2">
+              <Text className="text-center text-accent font-semibold">
                 {mode === 'login'
                   ? 'Create an account'
                   : 'Already have an account? Login'}
