@@ -2,6 +2,8 @@ import { Client, Databases, ID, Query, Account } from "react-native-appwrite";
 
 const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!;
 const COLLECTION_ID = process.env.EXPO_PUBLIC_APPWRITE_COLLECTION_ID!;
+const USERS_COLLECTION_ID =
+    process.env.EXPO_PUBLIC_APPWRITE_USERS_COLLECTION_ID!;
 
 const client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1")
@@ -19,6 +21,16 @@ export const login = (email: string, password: string) =>
 export const getCurrentUser = () => account.get();
 
 export const logout = () => account.deleteSession("current");
+
+export const createUserDocument = (
+    userId: string,
+    name: string,
+    email: string
+) =>
+    database.createDocument(DATABASE_ID, USERS_COLLECTION_ID, userId, {
+        name,
+        email,
+    });
 
 export const updateSearchCount = async (query: string, movie: Movie) => {
     try {

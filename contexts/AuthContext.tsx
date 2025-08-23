@@ -1,6 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { Models } from 'react-native-appwrite';
-import { createUser, login, getCurrentUser, logout } from '@/services/appwrite';
+import {
+  createUser,
+  login,
+  getCurrentUser,
+  logout,
+  createUserDocument,
+} from '@/services/appwrite';
 
 interface AuthContextProps {
   user: Models.User<Models.Preferences> | null;
@@ -37,7 +43,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    await createUser(email, password, name);
+    const newUser = await createUser(email, password, name);
+    await createUserDocument(newUser.$id, name, email);
     const current = await getCurrentUser();
     setUser(current);
   };
