@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Redirect, useRouter } from 'expo-router';
+import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { images } from '@/constants/images';
 import { icons } from '@/constants/icons';
@@ -24,8 +25,36 @@ const Login = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const authMutation = useMutation({
+    mutationFn: async () => {
+      if (mode === 'login') {
+        await signIn(email, password);
+      } else {
+        await signUp(email, password, name);
+      }
+    },
+    onSuccess: () => {
+      if (mode === 'register') {
+        Alert.alert('Success', 'Account created successfully');
+      }
+      router.replace('/');
+    },
+    onError: (err: any) => {
+      const rawMessage = err?.message || 'Something went wrong';
+      let displayMessage = rawMessage;
+      if (err.code === 409) {
+        displayMessage = 'Account already exists. Please login.';
+      } else if (
+        err.code === 401 ||
+        rawMessage.toLowerCase().includes('invalid')
+      ) {
+        displayMessage = 'Invalid email or password.';
+      }
+      setError(displayMessage);
+      Alert.alert('Error', displayMessage);
+    },
+  });
 
   if (user) return <Redirect href="/" />;
 
@@ -34,30 +63,12 @@ const Login = () => {
     setMode(mode === 'login' ? 'register' : 'login');
   };
 
-  const handleAuth = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      if (mode === 'login') {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password, name);
-        Alert.alert('Success', 'Account created successfully');
-      }
-      router.replace('/');
-    } catch (err: any) {
-      const message = err?.message || 'Something went wrong';
-      if (err.code === 409) {
-        setError('Account already exists. Please login.');
-      } else if (err.code === 401 || message.toLowerCase().includes('invalid')) {
-        setError('Invalid email or password.');
-      } else {
-        setError(message);
-      }
-    } finally {
-      setLoading(false);
-    }
+  const handleAuth = () => {
+    setError('');
+    authMutation.mutate();
   };
+
+  const loading = authMutation.isPending;
 
   return (
     <SafeAreaView className="flex-1 bg-primary">
@@ -112,18 +123,20 @@ const Login = () => {
             <TouchableOpacity
               onPress={handleAuth}
               disabled={loading}
-              className="bg-secondary py-3 rounded-md"
+              className={`py-3 rounded-full shadow-lg ${
+                loading ? 'bg-accent/60' : 'bg-accent'
+              }`}
             >
               {loading ? (
-                <ActivityIndicator color="#151312" />
+                <ActivityIndicator color="#030014" />
               ) : (
                 <Text className="text-primary text-center font-semibold">
                   {mode === 'login' ? 'Login' : 'Register'}
                 </Text>
               )}
             </TouchableOpacity>
-            <TouchableOpacity onPress={toggleMode}>
-              <Text className="text-center text-gray-500">
+            <TouchableOpacity onPress={toggleMode} className="mt-2">
+              <Text className="text-center text-accent font-semibold">
                 {mode === 'login'
                   ? 'Create an account'
                   : 'Already have an account? Login'}
