@@ -48,3 +48,16 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Environment Variables
+
+Create a `.env` file and provide the following values for Appwrite integration:
+
+```
+EXPO_PUBLIC_APPWRITE_PROJECT_ID=
+EXPO_PUBLIC_APPWRITE_DATABASE_ID=
+EXPO_PUBLIC_APPWRITE_COLLECTION_ID=
+EXPO_PUBLIC_APPWRITE_USERS_COLLECTION_ID=
+```
+
+The `COLLECTION_ID` stores search metrics, while `USERS_COLLECTION_ID` stores user profile documents.

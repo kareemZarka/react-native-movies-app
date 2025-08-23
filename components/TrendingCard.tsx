@@ -1,5 +1,5 @@
-import { Link } from "expo-router";
 import MaskedView from "@react-native-masked-view/masked-view";
+import { Link } from "expo-router";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 
 import { images } from "@/constants/images";
