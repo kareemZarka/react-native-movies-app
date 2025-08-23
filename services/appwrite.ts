@@ -16,7 +16,7 @@ export const createUser = (email: string, password: string, name: string) =>
     account.create(ID.unique(), email, password, name);
 
 export const login = (email: string, password: string) =>
-    account.createEmailSession(email, password);
+    account.createEmailPasswordSession(email, password);
 
 export const getCurrentUser = () => account.get();
 
