@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, name: string) => {
     const newUser = await createUser(email, password, name);
+    await login(email, password);
     await createUserDocument(newUser.$id, name, email);
     const current = await getCurrentUser();
     setUser(current);
