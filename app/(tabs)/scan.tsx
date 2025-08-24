@@ -39,7 +39,7 @@ export default function Scan() {
              * so we style it directly to ensure it expands to fill the screen */}
             <CameraView ref={cameraRef} facing="front" style={{ flex: 1 }} />
 
-            <View className="absolute bottom-8 w-full items-center">
+            <View className="absolute bottom-24 w-full items-center">
                 {step < instructions.length && (
                     <Text className="text-secondary text-base mb-4">
                         {instructions[step]}
