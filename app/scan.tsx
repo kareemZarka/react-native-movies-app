@@ -16,8 +16,9 @@ import {
     StyleSheet,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { CameraView, useCameraPermissions } from "expo-camera";
-import { LinearGradient } from "expo-linear-gradient";
+import { CameraView, useCameraPermissions } from "expo-camera"; // eslint-disable-line import/no-unresolved
+import { LinearGradient } from "expo-linear-gradient"; // eslint-disable-line import/no-unresolved
+import Button from "@/components/Button";
 
 enum Pose {
     Left = "left",
@@ -192,15 +193,13 @@ export default function Scan() {
 
     if (!permission.granted) {
         return (
-            <SafeAreaView
-                style={{ flex: 1, backgroundColor: "#000", justifyContent: "center", alignItems: "center" }}
-            >
-                <TouchableOpacity
+            <SafeAreaView className="flex-1 bg-primary justify-center items-center">
+                <Button
+                    label="Grant Permission"
                     onPress={ensurePermission}
-                    style={{ backgroundColor: "#AB8BFF", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999 }}
-                >
-                    <Text style={{ color: "#000", fontWeight: "700" }}>Grant Permission</Text>
-                </TouchableOpacity>
+                    className="bg-accent px-4 py-2"
+                    textClassName="text-primary"
+                />
             </SafeAreaView>
         );
     }
@@ -218,7 +217,7 @@ export default function Scan() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#000" }}>
+        <SafeAreaView className="flex-1 bg-primary">
             {/* Camera or Preview Image */}
             {previewUri ? (
                 <Image source={{ uri: previewUri }} style={StyleSheet.absoluteFillObject} />
@@ -247,7 +246,7 @@ export default function Scan() {
                 }}
                 pointerEvents="none"
             >
-                <View style={{ width: `${progress}%`, height: "100%", backgroundColor: "#AB8BFF" }} />
+                <View style={{ width: `${progress}%` }} className="h-full bg-accent" />
             </View>
 
             {/* Instruction pill */}
@@ -271,7 +270,7 @@ export default function Scan() {
                         borderColor: "rgba(255,255,255,0.12)",
                     }}
                 >
-                    <Text style={{ color: "#fff", opacity: 0.9, fontSize: 16, fontWeight: "600" }}>{instruction}</Text>
+                    <Text className="text-light-100 opacity-90 text-base font-semibold">{instruction}</Text>
                 </View>
             </View>
 
@@ -290,42 +289,22 @@ export default function Scan() {
                     pointerEvents="box-none"
                 >
                     {/* Retake: compact pill */}
-                    <TouchableOpacity
+                    <Button
+                        label="Retake"
                         onPress={retake}
-                        activeOpacity={0.85}
-                        accessibilityRole="button"
                         accessibilityLabel="Retake photo"
-                        style={{
-                            width: 120,                 // compact
-                            height: 48,                 // smaller height
-                            borderRadius: 999,
-                            borderWidth: 1,
-                            borderColor: "rgba(255,255,255,0.6)",
-                            backgroundColor: "rgba(0,0,0,0.35)",
-                            justifyContent: "center",
-                            alignItems: "center",
-                        }}
-                    >
-                        <Text style={{ color: "#fff", fontWeight: "700" }}>Retake</Text>
-                    </TouchableOpacity>
+                        className="w-[120px] h-12 border border-light-100/60 bg-dark-200/35"
+                        textClassName="text-light-100"
+                    />
 
                     {/* Use: fills remaining space */}
-                    <TouchableOpacity
+                    <Button
+                        label="Use"
                         onPress={confirm}
-                        activeOpacity={0.9}
-                        accessibilityRole="button"
                         accessibilityLabel="Use this photo"
-                        style={{
-                            flex: 1,                    // fills the rest
-                            height: 48,
-                            borderRadius: 999,
-                            backgroundColor: "#AB8BFF",
-                            justifyContent: "center",
-                            alignItems: "center",
-                        }}
-                    >
-                        <Text style={{ color: "#000", fontWeight: "700" }}>Use</Text>
-                    </TouchableOpacity>
+                        className="flex-1 h-12 bg-accent"
+                        textClassName="text-primary"
+                    />
                 </View>
             ) : (
                 // Single primary button for Live (Capture) and Completed (Send)
@@ -366,7 +345,7 @@ export default function Scan() {
                             (sending ? (
                                 <ActivityIndicator color="#000" />
                             ) : (
-                                <Text style={{ color: "#000", fontWeight: "700" }}>Send</Text>
+                                <Text className="text-primary font-bold">Send</Text>
                             ))}
                     </TouchableOpacity>
                 </View>
