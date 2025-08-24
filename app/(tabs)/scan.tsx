@@ -35,7 +35,9 @@ export default function Scan() {
 
     return (
         <SafeAreaView className="flex-1 bg-primary">
-            <CameraView ref={cameraRef} facing="front" className="flex-1" />
+            {/* `CameraView` doesn't support the `className` prop from NativeWind,
+             * so we style it directly to ensure it expands to fill the screen */}
+            <CameraView ref={cameraRef} facing="front" style={{ flex: 1 }} />
 
             <View className="absolute bottom-8 w-full items-center">
                 {step < instructions.length && (
