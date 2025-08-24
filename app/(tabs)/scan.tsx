@@ -47,9 +47,9 @@ export default function Scan() {
                 )}
                 <TouchableOpacity
                     onPress={capturePhoto}
-                    className="w-16 h-16 rounded-full bg-secondary justify-center items-center"
+                    className="bg-accent px-6 py-3 rounded-full"
                 >
-                    <View className="w-12 h-12 rounded-full bg-primary" />
+                    <Text className="text-primary font-semibold">Capture</Text>
                 </TouchableOpacity>
             </View>
 
