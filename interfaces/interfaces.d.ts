@@ -80,3 +80,27 @@ interface UserDocument {
   name: string;
   email: string;
 }
+
+type Pose = "left" | "right" | "straight";
+
+type Photos = Record<Pose, string | null>;
+
+type Phase = "live" | "preview" | "completed";
+
+type State = {
+  permissionReady: boolean;
+  phase: Phase;
+  current: Pose;
+  previewUri: string | null;
+  photos: Photos;
+  sending: boolean;
+};
+
+type Action =
+  | { type: "PERMISSION_READY" }
+  | { type: "CAPTURED"; uri: string }
+  | { type: "RETAKE" }
+  | { type: "CONFIRM" }
+  | { type: "SEND_START" }
+  | { type: "SEND_SUCCESS" }
+  | { type: "SEND_FAIL" };

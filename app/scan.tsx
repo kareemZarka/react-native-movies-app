@@ -19,49 +19,12 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { CameraView, useCameraPermissions } from "expo-camera"; // eslint-disable-line import/no-unresolved
 import { LinearGradient } from "expo-linear-gradient"; // eslint-disable-line import/no-unresolved
 import Button from "@/components/Button";
-
-enum Pose {
-    Left = "left",
-    Right = "right",
-    Straight = "straight",
-}
-const POSES: Pose[] = [Pose.Left, Pose.Right, Pose.Straight];
-const LABEL: Record<Pose, string> = {
-    [Pose.Left]: "Look left",
-    [Pose.Right]: "Look right",
-    [Pose.Straight]: "Look straight",
-};
-
-type Photos = Record<Pose, string | null>;
-
-enum Phase {
-    Live = "live",
-    Preview = "preview",
-    Completed = "completed",
-}
-
-type State = {
-    permissionReady: boolean;
-    phase: Phase;
-    current: Pose;
-    previewUri: string | null;
-    photos: Photos;
-    sending: boolean;
-};
-
-type Action =
-    | { type: "PERMISSION_READY" }
-    | { type: "CAPTURED"; uri: string }
-    | { type: "RETAKE" }
-    | { type: "CONFIRM" }
-    | { type: "SEND_START" }
-    | { type: "SEND_SUCCESS" }
-    | { type: "SEND_FAIL" };
+import { LABEL, POSES, uploadFaces } from "@/services/scan";
 
 const initialState: State = {
     permissionReady: false,
-    phase: Phase.Live,
-    current: Pose.Left,
+    phase: "live",
+    current: "left",
     previewUri: null,
     photos: { left: null, right: null, straight: null },
     sending: false,
@@ -72,9 +35,9 @@ function reducer(state: State, action: Action): State {
         case "PERMISSION_READY":
             return { ...state, permissionReady: true };
         case "CAPTURED":
-            return { ...state, phase: Phase.Preview, previewUri: action.uri };
+            return { ...state, phase: "preview", previewUri: action.uri };
         case "RETAKE":
-            return { ...state, phase: Phase.Live, previewUri: null };
+            return { ...state, phase: "live", previewUri: null };
         case "CONFIRM": {
             const updated: Photos = { ...state.photos, [state.current]: state.previewUri };
             const idx = POSES.indexOf(state.current);
@@ -84,7 +47,7 @@ function reducer(state: State, action: Action): State {
             return {
                 ...state,
                 photos: updated,
-                phase: allDone ? Phase.Completed : Phase.Live,
+                phase: allDone ? "completed" : "live",
                 current: allDone ? state.current : nextPose,
                 previewUri: null,
             };
@@ -97,25 +60,6 @@ function reducer(state: State, action: Action): State {
         default:
             return state;
     }
-}
-
-async function appendBlob(form: FormData, name: string, uri: string) {
-    const blob = await (await fetch(uri)).blob();
-    form.append(name, blob, `${name}.jpg`);
-}
-
-async function uploadFaces(photos: Photos) {
-    const form = new FormData();
-    for (const pose of POSES) {
-        const uri = photos[pose];
-        if (!uri) throw new Error(`Missing photo for ${pose}`);
-        await appendBlob(form, pose, uri);
-    }
-    const res = await fetch("https://example.com/api/upload-faces", {
-        method: "POST",
-        body: form,
-    });
-    if (!res.ok) throw new Error(`Upload failed (${res.status})`);
 }
 
 export default function Scan() {
@@ -139,7 +83,7 @@ export default function Scan() {
 
     // Android back = Retake while in Preview
     useEffect(() => {
-        if (phase !== Phase.Preview) return;
+        if (phase !== "preview") return;
         const sub = BackHandler.addEventListener("hardwareBackPress", () => {
             dispatch({ type: "RETAKE" });
             return true;
@@ -205,15 +149,15 @@ export default function Scan() {
     }
 
     const instruction =
-        phase === Phase.Preview
+        phase === "preview"
             ? `Preview — ${LABEL[current]}`
-            : phase === Phase.Completed
+            : phase === "completed"
                 ? "All set — Ready to send"
                 : LABEL[current];
 
     const onPrimaryPress = () => {
-        if (phase === Phase.Live) return capture();
-        if (phase === Phase.Completed) return send();
+        if (phase === "live") return capture();
+        if (phase === "completed") return send();
     };
 
     return (
@@ -275,7 +219,7 @@ export default function Scan() {
             </View>
 
             {/* Controls */}
-            {phase === Phase.Preview ? (
+            {phase === "preview" ? (
                 // Compact Retake + wide Use
                 <View
                     style={{
@@ -323,7 +267,7 @@ export default function Scan() {
                         activeOpacity={0.9}
                         accessibilityRole="button"
                         accessibilityLabel={
-                            phase === Phase.Live
+                            phase === "live"
                                 ? "Capture photo"
                                 : sending
                                     ? "Sending"
@@ -335,13 +279,13 @@ export default function Scan() {
                             borderRadius: 999,
                             justifyContent: "center",
                             alignItems: "center",
-                            backgroundColor: phase === Phase.Live ? "#FFFFFF" : "#AB8BFF",
+                            backgroundColor: phase === "live" ? "#FFFFFF" : "#AB8BFF",
                         }}
                     >
-                        {phase === Phase.Live && (
+                        {phase === "live" && (
                             <View style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: "#EDEDED" }} />
                         )}
-                        {phase === Phase.Completed &&
+                        {phase === "completed" &&
                             (sending ? (
                                 <ActivityIndicator color="#000" />
                             ) : (
