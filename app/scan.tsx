@@ -1,5 +1,20 @@
-import React, { useMemo, useReducer, useRef, useCallback } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, Alert } from "react-native";
+import React, {
+    useMemo,
+    useReducer,
+    useRef,
+    useCallback,
+    useEffect,
+} from "react";
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    Image,
+    ActivityIndicator,
+    Alert,
+    BackHandler,
+    StyleSheet,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { LinearGradient } from "expo-linear-gradient";
@@ -38,7 +53,6 @@ type Action =
     | { type: "CAPTURED"; uri: string }
     | { type: "RETAKE" }
     | { type: "CONFIRM" }
-    | { type: "GOTO"; pose: Pose }
     | { type: "SEND_START" }
     | { type: "SEND_SUCCESS" }
     | { type: "SEND_FAIL" };
@@ -74,8 +88,6 @@ function reducer(state: State, action: Action): State {
                 previewUri: null,
             };
         }
-        case "GOTO":
-            return { ...state, current: action.pose, phase: Phase.Live, previewUri: null };
         case "SEND_START":
             return { ...state, sending: true };
         case "SEND_SUCCESS":
@@ -110,19 +122,39 @@ export default function Scan() {
     const insets = useSafeAreaInsets();
     const [permission, requestPermission] = useCameraPermissions();
     const [state, dispatch] = useReducer(reducer, initialState);
-    const { permissionReady, phase, current, previewUri, photos, sending } = state;
+    const { phase, current, previewUri, photos, sending } = state;
 
-    const allDone = useMemo(() => POSES.every((p) => !!photos[p]), [photos]);
-    const showSend = phase === Phase.Completed && !previewUri && allDone;
+    // Request permission on mount
+    useEffect(() => {
+        (async () => {
+            if (!permission?.granted) await requestPermission();
+        })();
+    }, [permission?.granted, requestPermission]);
 
-    if (permission && !permissionReady) dispatch({ type: "PERMISSION_READY" });
+    // Mark permission ready when object exists
+    useEffect(() => {
+        if (permission) dispatch({ type: "PERMISSION_READY" });
+    }, [permission]);
+
+    // Android back = Retake while in Preview
+    useEffect(() => {
+        if (phase !== Phase.Preview) return;
+        const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+            dispatch({ type: "RETAKE" });
+            return true;
+        });
+        return () => sub.remove();
+    }, [phase]);
+
+    const progress = useMemo(
+        () => (POSES.filter((p) => photos[p]).length / POSES.length) * 100,
+        [photos]
+    );
 
     const ensurePermission = useCallback(async () => {
         if (!permission?.granted) {
             const res = await requestPermission();
-            if (!res.granted) {
-                Alert.alert("Permission required", "Please allow camera to continue.");
-            }
+            if (!res.granted) Alert.alert("Permission required", "Please allow camera to continue.");
         }
     }, [permission, requestPermission]);
 
@@ -141,17 +173,8 @@ export default function Scan() {
         }
     }, []);
 
-    const confirm = useCallback(() => {
-        dispatch({ type: "CONFIRM" });
-    }, []);
-
-    const retake = useCallback(() => {
-        dispatch({ type: "RETAKE" });
-    }, []);
-
-    const gotoPose = useCallback((pose: Pose) => {
-        dispatch({ type: "GOTO", pose });
-    }, []);
+    const confirm = useCallback(() => dispatch({ type: "CONFIRM" }), []);
+    const retake = useCallback(() => dispatch({ type: "RETAKE" }), []);
 
     const send = useCallback(async () => {
         try {
@@ -169,152 +192,185 @@ export default function Scan() {
 
     if (!permission.granted) {
         return (
-            <SafeAreaView className="flex-1 bg-primary justify-center items-center">
-                <TouchableOpacity onPress={ensurePermission} className="bg-secondary px-4 py-2 rounded-full">
-                    <Text className="text-primary font-semibold">Grant Permission</Text>
+            <SafeAreaView
+                style={{ flex: 1, backgroundColor: "#000", justifyContent: "center", alignItems: "center" }}
+            >
+                <TouchableOpacity
+                    onPress={ensurePermission}
+                    style={{ backgroundColor: "#AB8BFF", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999 }}
+                >
+                    <Text style={{ color: "#000", fontWeight: "700" }}>Grant Permission</Text>
                 </TouchableOpacity>
             </SafeAreaView>
         );
     }
 
+    const instruction =
+        phase === Phase.Preview
+            ? `Preview — ${LABEL[current]}`
+            : phase === Phase.Completed
+                ? "All set — Ready to send"
+                : LABEL[current];
+
+    const onPrimaryPress = () => {
+        if (phase === Phase.Live) return capture();
+        if (phase === Phase.Completed) return send();
+    };
+
     return (
-        <SafeAreaView className="flex-1 bg-black">
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#000" }}>
+            {/* Camera or Preview Image */}
             {previewUri ? (
-                <Image source={{ uri: previewUri }} style={{ flex: 1 }} />
+                <Image source={{ uri: previewUri }} style={StyleSheet.absoluteFillObject} />
             ) : (
                 <CameraView ref={cameraRef} facing="front" style={{ flex: 1 }} />
             )}
 
-            <ScrollView
-                horizontal
-                className="absolute top-4 left-0 px-4"
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingRight: 16, alignItems: "center" }}
-            >
-                {POSES.map((pose) => {
-                    const uri = photos[pose];
-                    const active = pose === current && !previewUri;
-                    return (
-                        <TouchableOpacity
-                            key={pose}
-                            onPress={() => uri && gotoPose(pose)}
-                            activeOpacity={uri ? 0.8 : 1}
-                            style={{ marginRight: 10, alignItems: "center" }}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Thumbnail ${pose}`}
-                        >
-                            <View
-                                style={{
-                                    width: 56,
-                                    height: 56,
-                                    borderRadius: 12,
-                                    borderWidth: active ? 2 : 1,
-                                    borderColor: active ? "#AB8BFF" : "rgba(255,255,255,0.4)",
-                                    overflow: "hidden",
-                                    backgroundColor: "rgba(255,255,255,0.06)",
-                                }}
-                            >
-                                {uri ? (
-                                    <Image source={{ uri }} style={{ width: "100%", height: "100%" }} />
-                                ) : (
-                                    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                                        <Text className="text-white/70 text-[10px] capitalize">{pose}</Text>
-                                    </View>
-                                )}
-                            </View>
-                            <Text className="text-white/70 text-[10px] mt-4 capitalize">{pose}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </ScrollView>
-
+            {/* Bottom gradient */}
             <LinearGradient
                 colors={["transparent", "rgba(0,0,0,0.6)", "rgba(0,0,0,0.95)"]}
                 style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 240 }}
+                pointerEvents="none"
             />
 
+            {/* Progress bar */}
+            <View
+                style={{
+                    position: "absolute",
+                    left: 24,
+                    right: 24,
+                    bottom: insets.bottom + 128,
+                    height: 4,
+                    borderRadius: 999,
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                    overflow: "hidden",
+                }}
+                pointerEvents="none"
+            >
+                <View style={{ width: `${progress}%`, height: "100%", backgroundColor: "#AB8BFF" }} />
+            </View>
+
+            {/* Instruction pill */}
             <View
                 style={{
                     position: "absolute",
                     left: 0,
                     right: 0,
-                    bottom: insets.bottom + 20,
-                    paddingHorizontal: 24,
+                    bottom: insets.bottom + 160,
                     alignItems: "center",
-                    gap: 14,
                 }}
+                pointerEvents="box-none"
             >
-                {!previewUri ? (
-                    <Text className="text-white/90 text-base">{LABEL[current]}</Text>
-                ) : (
-                    <Text className="text-white/90 text-base">Preview — {LABEL[current]}</Text>
-                )}
-
-                {!previewUri ? (
-                    <>
-                        <TouchableOpacity
-                            onPress={capture}
-                            activeOpacity={0.9}
-                            style={{
-                                width: 80,
-                                height: 80,
-                                borderRadius: 999,
-                                backgroundColor: "white",
-                                justifyContent: "center",
-                                alignItems: "center",
-                            }}
-                            accessibilityRole="button"
-                            accessibilityLabel="Capture photo"
-                        >
-                            <View style={{ width: 64, height: 64, borderRadius: 999, backgroundColor: "#EDEDED" }} />
-                        </TouchableOpacity>
-
-                        {showSend && (
-                            <TouchableOpacity
-                                onPress={send}
-                                disabled={sending}
-                                style={{
-                                    marginTop: 8,
-                                    paddingHorizontal: 18,
-                                    paddingVertical: 12,
-                                    borderRadius: 999,
-                                    backgroundColor: "#AB8BFF",
-                                    opacity: sending ? 0.7 : 1,
-                                }}
-                                accessibilityRole="button"
-                                accessibilityLabel="Send photos"
-                            >
-                                {sending ? (
-                                    <ActivityIndicator />
-                                ) : (
-                                    <Text className="text-black font-semibold">Send</Text>
-                                )}
-                            </TouchableOpacity>
-                        )}
-                    </>
-                ) : (
-                    <View style={{ flexDirection: "row", gap: 16 }}>
-                        <TouchableOpacity
-                            onPress={retake}
-                            className="px-5 py-3 rounded-full"
-                            style={{ backgroundColor: "rgba(255,255,255,0.14)" }}
-                            accessibilityRole="button"
-                            accessibilityLabel="Retake photo"
-                        >
-                            <Text className="text-white font-medium">Retake</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={confirm}
-                            className="px-5 py-3 rounded-full"
-                            style={{ backgroundColor: "#AB8BFF" }}
-                            accessibilityRole="button"
-                            accessibilityLabel="Use photo"
-                        >
-                            <Text className="text-black font-semibold">Use Photo</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
+                <View
+                    style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 8,
+                        borderRadius: 999,
+                        backgroundColor: "rgba(0,0,0,0.55)",
+                        borderWidth: 1,
+                        borderColor: "rgba(255,255,255,0.12)",
+                    }}
+                >
+                    <Text style={{ color: "#fff", opacity: 0.9, fontSize: 16, fontWeight: "600" }}>{instruction}</Text>
+                </View>
             </View>
+
+            {/* Controls */}
+            {phase === Phase.Preview ? (
+                // Compact Retake + wide Use
+                <View
+                    style={{
+                        position: "absolute",
+                        left: 16,
+                        right: 16,
+                        bottom: insets.bottom + 24,
+                        flexDirection: "row",
+                        gap: 12,
+                    }}
+                    pointerEvents="box-none"
+                >
+                    {/* Retake: compact pill */}
+                    <TouchableOpacity
+                        onPress={retake}
+                        activeOpacity={0.85}
+                        accessibilityRole="button"
+                        accessibilityLabel="Retake photo"
+                        style={{
+                            width: 120,                 // compact
+                            height: 48,                 // smaller height
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            borderColor: "rgba(255,255,255,0.6)",
+                            backgroundColor: "rgba(0,0,0,0.35)",
+                            justifyContent: "center",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Text style={{ color: "#fff", fontWeight: "700" }}>Retake</Text>
+                    </TouchableOpacity>
+
+                    {/* Use: fills remaining space */}
+                    <TouchableOpacity
+                        onPress={confirm}
+                        activeOpacity={0.9}
+                        accessibilityRole="button"
+                        accessibilityLabel="Use this photo"
+                        style={{
+                            flex: 1,                    // fills the rest
+                            height: 48,
+                            borderRadius: 999,
+                            backgroundColor: "#AB8BFF",
+                            justifyContent: "center",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Text style={{ color: "#000", fontWeight: "700" }}>Use</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                // Single primary button for Live (Capture) and Completed (Send)
+                <View
+                    style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        bottom: insets.bottom + 24,
+                        alignItems: "center",
+                    }}
+                    pointerEvents="box-none"
+                >
+                    <TouchableOpacity
+                        onPress={onPrimaryPress}
+                        activeOpacity={0.9}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                            phase === Phase.Live
+                                ? "Capture photo"
+                                : sending
+                                    ? "Sending"
+                                    : "Send photos"
+                        }
+                        style={{
+                            width: 88,
+                            height: 88,
+                            borderRadius: 999,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            backgroundColor: phase === Phase.Live ? "#FFFFFF" : "#AB8BFF",
+                        }}
+                    >
+                        {phase === Phase.Live && (
+                            <View style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: "#EDEDED" }} />
+                        )}
+                        {phase === Phase.Completed &&
+                            (sending ? (
+                                <ActivityIndicator color="#000" />
+                            ) : (
+                                <Text style={{ color: "#000", fontWeight: "700" }}>Send</Text>
+                            ))}
+                    </TouchableOpacity>
+                </View>
+            )}
         </SafeAreaView>
     );
 }
