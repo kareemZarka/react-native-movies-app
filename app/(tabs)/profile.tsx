@@ -2,10 +2,11 @@ import { icons } from "@/constants/icons";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 
 const Profile = () => {
     const { user, logOut } = useAuth();
+    const router = useRouter();
 
     if (!user) return <Redirect href="/login" />;
 
@@ -17,6 +18,13 @@ const Profile = () => {
                     {user.name}
                 </Text>
                 <Text className="text-gray-500">{user.email}</Text>
+
+                <TouchableOpacity
+                    className="bg-secondary px-5 py-2 rounded-md"
+                    onPress={() => router.push("/scan")}
+                >
+                    <Text className="text-primary font-semibold">Scan</Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity
                     className="bg-secondary px-5 py-2 rounded-md mt-4"

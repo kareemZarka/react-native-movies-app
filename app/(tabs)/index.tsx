@@ -4,7 +4,6 @@ import {
     ActivityIndicator,
     ScrollView,
     Image,
-    TouchableOpacity,
     FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -48,14 +47,8 @@ const Index = () => {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ minHeight: "100%", paddingBottom: 10 }}
             >
-                <View className="flex-row mt-20 mb-5 items-center justify-between">
+                <View className="flex-row mt-20 mb-5 items-center justify-center">
                     <Image source={icons.logo} className="w-12 h-10" />
-                    <TouchableOpacity
-                        onPress={() => router.push("/scan")}
-                        className="p-2 rounded-full bg-secondary"
-                    >
-                        <Image source={icons.scan} className="w-6 h-6" />
-                    </TouchableOpacity>
                 </View>
 
                 {moviesLoading || trendingLoading ? (
