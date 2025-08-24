@@ -1,15 +1,15 @@
 import { useRef, useState } from "react";
 import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Camera, CameraType } from "expo-camera";
+import { CameraView, useCameraPermissions } from "expo-camera";
 
 const instructions = ["Look left", "Look right"];
 
 export default function Scan() {
-    const cameraRef = useRef<Camera>(null);
+    const cameraRef = useRef<CameraView>(null);
     const [step, setStep] = useState(0);
     const [photos, setPhotos] = useState<string[]>([]);
-    const [permission, requestPermission] = Camera.useCameraPermissions();
+    const [permission, requestPermission] = useCameraPermissions();
 
     if (!permission) {
         return <View />;
@@ -35,7 +35,7 @@ export default function Scan() {
 
     return (
         <SafeAreaView className="flex-1 bg-primary">
-            <Camera ref={cameraRef} type={CameraType.front} className="flex-1" />
+            <CameraView ref={cameraRef} facing="front" className="flex-1" />
 
             <View className="absolute bottom-8 w-full items-center">
                 {step < instructions.length && (
