@@ -197,7 +197,7 @@ export default function Scan() {
                 <Button
                     label="Grant Permission"
                     onPress={ensurePermission}
-                    className="bg-accent px-4 py-2"
+                    className="text-light-100 px-4 py-2"
                     textClassName="text-primary"
                 />
             </SafeAreaView>
