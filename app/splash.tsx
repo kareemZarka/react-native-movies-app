@@ -14,11 +14,12 @@ const Splash = () => {
 
     return (
         <SafeAreaView className="flex-1 bg-primary">
-            <View className="flex-1 items-center justify-between px-6 pb-16 pt-10">
+            <View className="flex-1 items-center justify-between px-6 pb-16 pt-14">
                 <View className="items-center w-full" style={{ marginTop: "20%" }}>
-                    <Text className="text-5xl font-extrabold text-neon-pink leading-tight text-center">RateMy</Text>
-                    <Text className="text-5xl font-extrabold text-text-primary text-center">Feet🦶</Text>
-                    <View className="mt-4">
+                    <Text className="text-6xl font-extrabold text-neon-pink leading-tight text-center">RateMy</Text>
+                    <Text className="text-6xl font-extrabold text-text-primary text-center">Feet</Text>
+                    <Text className="text-5xl mt-1">🦶</Text>
+                    <View className="mt-6">
                         <MaskedView
                             maskElement={
                                 <Text className="text-2xl font-extrabold text-center leading-8">
@@ -46,17 +47,14 @@ const Splash = () => {
                 <TouchableOpacity
                     activeOpacity={0.9}
                     onPress={() => router.replace("/login")}
-                    className="w-[70%] rounded-full overflow-hidden shadow-2xl shadow-[#FF4F9A80]"
-                    style={{ height: 60 }}
+                    className="w-[70%] h-[60px] rounded-full items-center justify-center"
+                    style={{ shadowColor: "#FF4F9A", shadowOpacity: 0.7, shadowRadius: 20, shadowOffset: { width: 0, height: 10 } }}
                 >
-                    <LinearGradient
-                        colors={["#FF4F9A", "#FF4F9A", "#36F1CD", "#4A90F7"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        className="flex-1 items-center justify-center"
-                    >
-                        <Text className="text-white font-bold text-xl">CONTINUE</Text>
-                    </LinearGradient>
+                    <View className="w-full h-full rounded-full" style={{ backgroundColor: "#FF4F9A" }}>
+                        <View className="flex-1 items-center justify-center">
+                            <Text className="text-white font-bold text-xl">CONTINUE</Text>
+                        </View>
+                    </View>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
