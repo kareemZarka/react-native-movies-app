@@ -1,117 +1,66 @@
-import {
-    View,
-    Text,
-    ActivityIndicator,
-    ScrollView,
-    Image,
-    FlatList,
-} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { View, Text, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 
-import useFetch from "@/services/useFetch";
-import { fetchMovies } from "@/services/api";
-import { getTrendingMovies } from "@/services/appwrite";
-
-import { icons } from "@/constants/icons";
-import { images } from "@/constants/images";
-
-import SearchBar from "@/components/SearchBar";
-import MovieCard from "@/components/MovieCard";
-import TrendingCard from "@/components/TrendingCard";
+import FootCard from "@/components/FootCard";
+import { footHighlights, recentRatings } from "@/constants/feetData";
 
 const Index = () => {
     const router = useRouter();
-
-    const {
-        data: trendingMovies,
-        loading: trendingLoading,
-        error: trendingError,
-    } = useFetch(getTrendingMovies);
-
-    const {
-        data: movies,
-        loading: moviesLoading,
-        error: moviesError,
-    } = useFetch(() => fetchMovies({ query: "" }));
+    const diameter = Math.min(Dimensions.get("window").width * 0.7, 340);
+    const inner = diameter * 0.78;
 
     return (
         <View className="flex-1 bg-primary">
-            <Image
-                source={images.bg}
-                className="absolute w-full z-0"
-                resizeMode="cover"
-            />
-
             <ScrollView
-                className="flex-1 px-5"
+                className="flex-1"
+                contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 20 }}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ minHeight: "100%", paddingBottom: 10 }}
             >
-                <View className="flex-row mt-20 mb-5 items-center justify-center">
-                    <Image source={icons.logo} className="w-12 h-10" />
+                <View className="items-center mt-14 mb-10">
+                    <Text className="text-white text-4xl font-extrabold leading-tight text-center">
+                        SHOW ME{"\n"}THEM DOGS 😂
+                    </Text>
                 </View>
 
-                {moviesLoading || trendingLoading ? (
-                    <ActivityIndicator
-                        size="large"
-                        color="#0000ff"
-                        className="mt-10 self-center"
-                    />
-                ) : moviesError || trendingError ? (
-                    <Text>Error: {moviesError?.message || trendingError?.message}</Text>
-                ) : (
-                    <View className="flex-1 mt-5">
-                        <SearchBar
-                            onPress={() => {
-                                router.push("/search");
-                            }}
-                            placeholder="Search for a match"
-                        />
-
-                        {trendingMovies && (
-                            <View className="mt-10">
-                                <Text className="text-lg text-white font-bold mb-3">
-                                    Trending Matches
-                                </Text>
-                                <FlatList
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    className="mb-4 mt-3"
-                                    data={trendingMovies}
-                                    contentContainerStyle={{
-                                        gap: 26,
-                                    }}
-                                    renderItem={({ item, index }) => (
-                                        <TrendingCard movie={item} index={index} />
-                                    )}
-                                    keyExtractor={(item) => item.movie_id.toString()}
-                                    ItemSeparatorComponent={() => <View className="w-4" />}
-                                />
-                            </View>
-                        )}
-
-                        <>
-                            <Text className="text-lg text-white font-bold mt-5 mb-3">
-                                Latest Matches
+                <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => router.push("/scan")}
+                    className="items-center justify-center"
+                >
+                    <LinearGradient
+                        colors={["#FF4F9A", "#36F1CD", "#4A90F7"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{ width: diameter, height: diameter }}
+                        className="rounded-full items-center justify-center shadow-[0_0_35px_rgba(255,79,154,0.6)]"
+                    >
+                        <View
+                            className="rounded-full bg-primary items-center justify-center border border-border"
+                            style={{ width: inner, height: inner }}
+                        >
+                            <Text className="text-white font-extrabold text-4xl text-center leading-tight">
+                                RATE{"\n"}MY{"\n"}FEET
                             </Text>
+                        </View>
+                    </LinearGradient>
+                </TouchableOpacity>
 
-                            <FlatList
-                                data={movies}
-                                renderItem={({ item }) => <MovieCard {...item} />}
-                                keyExtractor={(item) => item.id.toString()}
-                                numColumns={3}
-                                columnWrapperStyle={{
-                                    justifyContent: "flex-start",
-                                    gap: 20,
-                                    paddingRight: 5,
-                                    marginBottom: 10,
-                                }}
-                                className="mt-2 pb-32"
-                                scrollEnabled={false}
-                            />
-                        </>
-                    </View>
-                )}
+                <Text className="text-text-secondary text-center mt-4">AI will be brutally honest.</Text>
+
+                <View className="mt-10">
+                    <Text className="text-white text-lg font-bold mb-4">Best feet (24h)</Text>
+                    {footHighlights.map((entry) => (
+                        <FootCard key={entry.id} entry={entry} showRank />
+                    ))}
+                </View>
+
+                <View className="mt-8">
+                    <Text className="text-white text-lg font-bold mb-4">Recent heat</Text>
+                    {recentRatings.map((entry) => (
+                        <FootCard key={entry.id} entry={entry} />
+                    ))}
+                </View>
             </ScrollView>
         </View>
     );

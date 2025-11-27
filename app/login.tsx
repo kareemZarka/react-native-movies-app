@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from "react";
 import {
     View,
     TextInput,
@@ -9,16 +9,16 @@ import {
     ScrollView,
     Platform,
     ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Redirect, useRouter } from 'expo-router';
-import { useMutation } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
-import { images } from '@/constants/images';
-import { icons } from '@/constants/icons';
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Redirect, useRouter } from "expo-router";
+import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { images } from "@/constants/images";
 
 type Status = {
-    type: '' | 'error' | 'success';
+    type: "" | "error" | "success";
     message: string;
 };
 
@@ -26,152 +26,170 @@ const Login = () => {
     const { signIn, signUp, user } = useAuth();
     const router = useRouter();
 
-    const [mode, setMode] = useState<'login' | 'register'>('login');
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [status, setStatus] = useState<Status>({ type: '', message: '' });
+    const [mode, setMode] = useState<"login" | "register">("login");
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [status, setStatus] = useState<Status>({ type: "", message: "" });
 
     const authMutation = useMutation({
-        mutationFn: async () => {
-            if (mode === 'login') {
+        mutationFn: async (flow: "login" | "register") => {
+            if (flow === "login") {
                 await signIn(email, password);
             } else {
                 await signUp(email, password, name);
             }
         },
-        onSuccess: () => {
-            if (mode === 'register') {
-                setStatus({ type: 'success', message: 'Account created successfully 🎉' });
+        onSuccess: (_, flow) => {
+            if (flow === "register") {
+                setStatus({ type: "success", message: "Account created successfully 🎉" });
             }
-            router.replace('/');
+            router.replace("/");
         },
         onError: (err: any) => {
-            const rawMessage = err?.message || 'Something went wrong';
+            const rawMessage = err?.message || "Something went wrong";
             let displayMessage = rawMessage;
 
             if (err.code === 409) {
-                displayMessage = 'Account already exists. Please login.';
-            } else if (
-                err.code === 401 ||
-                rawMessage.toLowerCase().includes('invalid')
-            ) {
-                displayMessage = 'Invalid email or password.';
+                displayMessage = "Account already exists. Please login.";
+            } else if (err.code === 401 || rawMessage.toLowerCase().includes("invalid")) {
+                displayMessage = "Invalid email or password.";
             }
 
-            setStatus({ type: 'error', message: displayMessage });
+            setStatus({ type: "error", message: displayMessage });
         },
     });
 
-    // Auto-clear success after 3s
     useEffect(() => {
-        if (status.type === 'success') {
-            const t = setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+        if (status.type === "success") {
+            const t = setTimeout(() => setStatus({ type: "", message: "" }), 3000);
             return () => clearTimeout(t);
         }
     }, [status]);
 
-    const toggleMode = useCallback(() => {
-        setStatus({ type: '', message: '' });
-        setMode((prev) => (prev === 'login' ? 'register' : 'login'));
-    }, []);
+    const setAndSubmit = useCallback(
+        (flow: "login" | "register") => {
+            setMode(flow);
+            setStatus({ type: "", message: "" });
+            authMutation.mutate(flow);
+        },
+        [authMutation]
+    );
 
-    const handleAuth = useCallback(() => {
-        setStatus({ type: '', message: '' });
-        authMutation.mutate();
-    }, [authMutation]);
-
-    // Precompute error flags (avoids repeated string ops in render)
-    const errorLower = status.type === 'error' ? status.message.toLowerCase() : '';
-    const emailError = errorLower.includes('email');
-    const passwordError = errorLower.includes('password');
+    const errorLower = status.type === "error" ? status.message.toLowerCase() : "";
+    const emailError = errorLower.includes("email");
+    const passwordError = errorLower.includes("password");
 
     if (user) return <Redirect href="/" />;
 
     return (
         <SafeAreaView className="flex-1 bg-primary">
-            <Image
-                source={images.bg}
-                className="absolute w-full h-full"
-                resizeMode="cover"
-            />
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                className="flex-1"
-            >
+            <Image source={images.bg} className="absolute w-full h-full opacity-30" resizeMode="cover" />
+
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
                 <ScrollView
                     className="flex-1 px-5"
                     contentContainerStyle={{ flexGrow: 1 }}
                     keyboardShouldPersistTaps="handled"
                 >
-                    <Image
-                        source={icons.logo}
-                        className="w-12 h-10 mt-20 mb-10 self-center"
-                    />
-                    <View className="gap-4 mt-10">
-                        {mode === 'register' && (
+                    <View className="mt-14 mb-10 items-center">
+                        <Text className="text-4xl font-bold text-text-primary">RateMy
+                            <Text className="text-neon-pink">Feet</Text>
+                        </Text>
+                        <Text className="text-4xl font-bold text-text-primary mt-2">🦶🔥</Text>
+                        <Text className="text-center text-text-primary text-2xl font-bold mt-6 leading-8">
+                            ARE YOUR FEET{"\n"}HOT OR NOT?
+                        </Text>
+                        <LinearGradient
+                            colors={["#36F1CD", "#4A90F7"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            className="px-4 py-1 rounded-full mt-3"
+                        >
+                            <Text className="text-black font-bold text-lg">TikTok-ready neon vibes</Text>
+                        </LinearGradient>
+                    </View>
+
+                    <View className="bg-surface border border-border rounded-3xl p-5 shadow-xl shadow-[#FF4F9A33]">
+                        <Text className="text-center text-white text-4xl font-bold mb-2">
+                            Join the community 👣🔥
+                        </Text>
+                        <Text className="text-center text-text-secondary mb-6">
+                            Where your feet finally get the attention they deserve.
+                        </Text>
+
+                        {mode === "register" && (
                             <TextInput
-                                placeholder="Name"
-                                placeholderTextColor="#888"
+                                placeholder="Username"
+                                placeholderTextColor="#666"
                                 value={name}
                                 onChangeText={setName}
-                                className="bg-gray-800 text-white px-4 py-3 rounded-md"
+                                className="bg-border text-white px-4 py-4 rounded-2xl mb-3"
                             />
                         )}
 
                         <TextInput
                             placeholder="Email"
-                            placeholderTextColor="#888"
+                            placeholderTextColor="#666"
                             value={email}
                             onChangeText={setEmail}
                             autoCapitalize="none"
                             keyboardType="email-address"
-                            className={`bg-gray-800 text-white px-4 py-3 rounded-md ${
-                                emailError ? 'border border-red-500' : ''
+                            className={`bg-border text-white px-4 py-4 rounded-2xl mb-3 ${
+                                emailError ? "border border-neon-pink" : ""
                             }`}
                         />
 
                         <TextInput
                             placeholder="Password"
-                            placeholderTextColor="#888"
+                            placeholderTextColor="#666"
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
-                            className={`bg-gray-800 text-white px-4 py-3 rounded-md ${
-                                passwordError ? 'border border-red-500' : ''
+                            className={`bg-border text-white px-4 py-4 rounded-2xl mb-2 ${
+                                passwordError ? "border border-neon-pink" : ""
                             }`}
                         />
 
-                        {status.type === 'error' && (
-                            <Text className="text-red-500 text-center">{status.message}</Text>
+                        {status.type === "error" && (
+                            <Text className="text-red-400 text-center mb-2">{status.message}</Text>
                         )}
-                        {status.type === 'success' && (
-                            <Text className="text-green-500 text-center">{status.message}</Text>
+                        {status.type === "success" && (
+                            <Text className="text-green-400 text-center mb-2">{status.message}</Text>
                         )}
 
                         <TouchableOpacity
-                            onPress={handleAuth}
+                            onPress={() => setAndSubmit("register")}
                             disabled={authMutation.isPending}
-                            className={`py-3 rounded-full shadow-lg ${
-                                authMutation.isPending ? 'bg-accent/60' : 'bg-accent'
-                            }`}
+                            className="rounded-full overflow-hidden mt-2"
                         >
-                            {authMutation.isPending ? (
-                                <ActivityIndicator color="#030014" />
+                            <LinearGradient
+                                colors={["#FF4F9A", "#4A90F7"]}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                className="py-4"
+                            >
+                                {authMutation.isPending && mode === "register" ? (
+                                    <ActivityIndicator color="#000" />
+                                ) : (
+                                    <Text className="text-black text-center font-bold text-lg">Create Account</Text>
+                                )}
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={() => setAndSubmit("login")}
+                            disabled={authMutation.isPending}
+                            className="mt-4 py-4 border border-neon-blue rounded-full"
+                        >
+                            {authMutation.isPending && mode === "login" ? (
+                                <ActivityIndicator color="#4A90F7" />
                             ) : (
-                                <Text className="text-primary text-center font-semibold">
-                                    {mode === 'login' ? 'Login' : 'Register'}
-                                </Text>
+                                <Text className="text-white text-center font-semibold text-base">Login</Text>
                             )}
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={toggleMode} className="mt-2">
-                            <Text className="text-center text-accent font-semibold">
-                                {mode === 'login'
-                                    ? 'Create an account'
-                                    : 'Already have an account? Login'}
-                            </Text>
-                        </TouchableOpacity>
+                        <Text className="text-center text-text-secondary mt-4">No weird stuff. Just vibes.</Text>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
