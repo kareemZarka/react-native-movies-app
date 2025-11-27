@@ -111,7 +111,7 @@ const Scan = () => {
                         <Text className="text-white text-4xl font-extrabold text-center">READY TO RATE</Text>
                         <TouchableOpacity
                             activeOpacity={0.9}
-                            className="w-[80%] rounded-full overflow-hidden shadow-2xl shadow-[#FF4F9A66]"
+                            className="w-[70%] rounded-full overflow-hidden shadow-2xl shadow-[#FF4F9A66]"
                             onPress={startScan}
                             style={{ height: 60 }}
                         >
@@ -128,7 +128,7 @@ const Scan = () => {
 
                         <TouchableOpacity
                             activeOpacity={0.9}
-                            className="w-[80%] rounded-full overflow-hidden shadow-2xl shadow-[#4A90F766]"
+                            className="w-[70%] rounded-full overflow-hidden shadow-2xl shadow-[#4A90F766]"
                             onPress={startScan}
                             style={{ height: 60 }}
                         >

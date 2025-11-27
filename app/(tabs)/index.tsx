@@ -18,7 +18,7 @@ const Index = () => {
                 showsVerticalScrollIndicator={false}
             >
                 <View className="items-center mt-14 mb-10">
-                    <Text className="text-white text-4xl font-extrabold leading-tight text-center">
+                    <Text className="text-white text-5xl font-extrabold leading-tight text-center">
                         SHOW ME{"\n"}THEM DOGS 😂
                     </Text>
                 </View>
@@ -39,7 +39,7 @@ const Index = () => {
                             className="rounded-full bg-primary items-center justify-center border border-border"
                             style={{ width: inner, height: inner }}
                         >
-                            <Text className="text-white font-extrabold text-4xl text-center leading-tight">
+                            <Text className="text-white font-extrabold text-[36px] text-center leading-tight">
                                 RATE{"\n"}MY{"\n"}FEET
                             </Text>
                         </View>
