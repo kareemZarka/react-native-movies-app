@@ -6,19 +6,19 @@ module.exports = {
   theme: {
     extend: {
         colors: {
-            primary: '#030014',
-            secondary: '#151312',
-            light: {
-                100: '#D6C5FF',
-                200: '#A8B5DB',
-                300: '#9CA4AB',
+            primary: '#000000',
+            surface: '#111111',
+            border: '#1F1F1F',
+            text: {
+                primary: '#FFFFFF',
+                secondary: '#B3B3B3',
             },
-            dark: {
-                100: '#221f3d',
-                200: '#0f0d23'
-
+            neon: {
+                pink: '#FF4F9A',
+                blue: '#4A90F7',
+                teal: '#36F1CD',
             },
-            accent: '#AB8BFF',
+            gold: '#FFD700',
         }
     },
   },

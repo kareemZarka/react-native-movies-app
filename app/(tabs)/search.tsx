@@ -1,117 +1,71 @@
-import { useState, useEffect } from "react";
-import { View, Text, ActivityIndicator, FlatList, Image } from "react-native";
-
-import { images } from "@/constants/images";
-import { icons } from "@/constants/icons";
-
-import useFetch from "@/services/useFetch";
-import { fetchMovies } from "@/services/api";
-import { updateSearchCount } from "@/services/appwrite";
+import { useMemo, useState } from "react";
+import { FlatList, Text, View, TouchableOpacity } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 
 import SearchBar from "@/components/SearchBar";
-import MovieDisplayCard from "@/components/MovieCard";
+import type { FootEntry } from "@/constants/feetData";
+import { footHighlights, recentRatings } from "@/constants/feetData";
+
+const allEntries = [...footHighlights, ...recentRatings];
 
 const Search = () => {
-    const [searchQuery, setSearchQuery] = useState("");
+    const [query, setQuery] = useState("");
 
-    const {
-        data: movies = [],
-        loading,
-        error,
-        refetch: loadMovies,
-        reset,
-    } = useFetch(() => fetchMovies({ query: searchQuery }), false);
-
-    const handleSearch = (text: string) => {
-        setSearchQuery(text);
-    };
-
-    // Debounced search effect
-    useEffect(() => {
-        const timeoutId = setTimeout(async () => {
-            if (searchQuery.trim()) {
-                await loadMovies();
-
-                // Call updateSearchCount only if there are results
-                if (movies?.length! > 0 && movies?.[0]) {
-                    await updateSearchCount(searchQuery, movies[0]);
-                }
-            } else {
-                reset();
-            }
-        }, 500);
-
-        return () => clearTimeout(timeoutId);
-    }, [searchQuery]);
+    const results = useMemo(() => {
+        if (!query.trim()) return [] as FootEntry[];
+        return allEntries.filter((entry) =>
+            `${entry.username} ${entry.caption}`.toLowerCase().includes(query.toLowerCase())
+        );
+    }, [query]);
 
     return (
-        <View className="flex-1 bg-primary">
-            <Image
-                source={images.bg}
-                className="flex-1 absolute w-full z-0"
-                resizeMode="cover"
-            />
-
+        <View className="flex-1 bg-primary px-5">
             <FlatList
-                className="px-5"
-                data={movies as Movie[]}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => <MovieDisplayCard {...item} />}
-                numColumns={3}
-                columnWrapperStyle={{
-                    justifyContent: "flex-start",
-                    gap: 16,
-                    marginVertical: 16,
-                }}
-                contentContainerStyle={{ paddingBottom: 100 }}
+                data={results}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                    <TouchableOpacity
+                        activeOpacity={0.9}
+                        className="flex-row items-center justify-between bg-surface border border-border rounded-2xl px-4 py-3 mb-3"
+                    >
+                        <View className="flex-row items-center gap-3">
+                            <LinearGradient
+                                colors={["#FF4F9A", "#36F1CD", "#4A90F7"]}
+                                className="w-12 h-12 rounded-full items-center justify-center"
+                            >
+                                <Text className="text-2xl">{item.avatar}</Text>
+                            </LinearGradient>
+                            <View>
+                                <Text className="text-white font-semibold text-base">{item.username}</Text>
+                                <Text className="text-text-secondary text-xs">Best score</Text>
+                            </View>
+                        </View>
+                        <View className="flex-row items-center gap-2">
+                            <Text className="text-neon-pink font-bold text-lg">{item.score.toFixed(1)}</Text>
+                            <Ionicons name="chevron-forward" size={20} color="white" />
+                        </View>
+                    </TouchableOpacity>
+                )}
+                contentContainerStyle={{ paddingTop: 80, paddingBottom: 140 }}
                 ListHeaderComponent={
-                    <>
-                        <View className="w-full flex-row justify-center mt-20 items-center">
-                            <Image source={icons.logo} className="w-12 h-10" />
-                        </View>
-
-                        <View className="my-5">
-                            <SearchBar
-                                placeholder="Search for a match"
-                                value={searchQuery}
-                                onChangeText={handleSearch}
-                            />
-                        </View>
-
-                        {loading && (
-                            <ActivityIndicator
-                                size="large"
-                                color="#0000ff"
-                                className="my-3"
-                            />
-                        )}
-
-                        {error && (
-                            <Text className="text-red-500 px-5 my-3">
-                                Error: {error.message}
+                    <View className="gap-4">
+                        <Text className="text-center text-white text-3xl font-bold mt-6">Search</Text>
+                        <SearchBar
+                            placeholder="Search users…"
+                            value={query}
+                            onChangeText={setQuery}
+                        />
+                        {!query.trim() && (
+                            <Text className="text-text-secondary text-center">
+                                Find the hottest toes on RateMyFeet.
                             </Text>
                         )}
-
-                        {!loading &&
-                            !error &&
-                            searchQuery.trim() &&
-                            movies?.length! > 0 && (
-                                <Text className="text-xl text-white font-bold">
-                                    Search Results for{" "}
-                                    <Text className="text-accent">{searchQuery}</Text>
-                                </Text>
-                            )}
-                    </>
+                    </View>
                 }
                 ListEmptyComponent={
-                    !loading && !error ? (
-                        <View className="mt-10 px-5">
-                            <Text className="text-center text-gray-500">
-                                {searchQuery.trim()
-                                    ? "No matches found"
-                                    : "Start typing to search for matches"}
-                            </Text>
-                        </View>
+                    query.trim() ? (
+                        <Text className="text-center text-text-secondary mt-10">No feet found. Try a new vibe.</Text>
                     ) : null
                 }
             />

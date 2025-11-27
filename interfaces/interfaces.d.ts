@@ -104,3 +104,15 @@ type Action =
   | { type: "SEND_START" }
   | { type: "SEND_SUCCESS" }
   | { type: "SEND_FAIL" };
+
+type FootEntry = {
+  id: string;
+  username: string;
+  avatar: string;
+  score: number;
+  caption: string;
+  image: string;
+  date?: string;
+  rank?: number;
+  bestLabel?: string;
+};

@@ -12,7 +12,8 @@ export default function RootLayout() {
             <AuthProvider>
                 <StatusBar hidden={true} />
 
-                <Stack>
+                <Stack initialRouteName="splash">
+                    <Stack.Screen name="splash" options={{ headerShown: false }} />
                     <Stack.Screen name="login" options={{ headerShown: false }} />
                     <Stack.Screen
                         name="(tabs)"

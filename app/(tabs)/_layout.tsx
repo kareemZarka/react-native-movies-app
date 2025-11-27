@@ -1,31 +1,13 @@
 import { Tabs, Redirect } from "expo-router";
-import { ImageBackground, Image, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
-import { icons } from "@/constants/icons";
-import { images } from "@/constants/images";
 import { useAuth } from "@/contexts/AuthContext";
 
-function TabIcon({ focused, icon, title }: any) {
-    if (focused) {
-        return (
-            <ImageBackground
-                source={images.highlight}
-                className="flex flex-row w-full flex-1 min-w-[112px] min-h-16 mt-4 justify-center items-center rounded-full overflow-hidden"
-            >
-                <Image source={icon} tintColor="#151312" className="size-5" />
-                <Text className="text-secondary text-base font-semibold ml-2">
-                    {title}
-                </Text>
-            </ImageBackground>
-        );
-    }
-
-    return (
-        <View className="size-full justify-center items-center mt-4 rounded-full">
-            <Image source={icon} tintColor="#A8B5DB" className="size-5" />
-        </View>
-    );
-}
+const EmojiTab = ({ focused, emoji }: { focused: boolean; emoji: string }) => (
+    <View className="items-center justify-center flex-1">
+        <Text className={`text-2xl ${focused ? "text-neon-blue" : "text-white"}`}>{emoji}</Text>
+    </View>
+);
 
 export default function TabsLayout() {
     const { user } = useAuth();
@@ -43,26 +25,33 @@ export default function TabsLayout() {
                     alignItems: "center",
                 },
                 tabBarStyle: {
-                    backgroundColor: "#0F0D23",
-                    borderRadius: 50,
+                    backgroundColor: "#000000",
+                    borderRadius: 28,
                     marginHorizontal: 20,
-                    marginBottom: 36,
-                    height: 52,
+                    marginBottom: 24,
+                    height: 70,
                     position: "absolute",
                     overflow: "hidden",
                     borderWidth: 1,
-                    borderColor: "#0F0D23",
+                    borderColor: "#1F1F1F",
                 },
             }}
         >
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "index",
+                    title: "Home",
                     headerShown: false,
-                    tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon={icons.home} title="Home" />
-                    ),
+                    tabBarIcon: ({ focused }) => <EmojiTab focused={focused} emoji="🏠" />,
+                }}
+            />
+
+            <Tabs.Screen
+                name="best"
+                options={{
+                    title: "Best Feet",
+                    headerShown: false,
+                    tabBarIcon: ({ focused }) => <EmojiTab focused={focused} emoji="⭐" />,
                 }}
             />
 
@@ -71,9 +60,7 @@ export default function TabsLayout() {
                 options={{
                     title: "Search",
                     headerShown: false,
-                    tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon={icons.search} title="Search" />
-                    ),
+                    tabBarIcon: ({ focused }) => <EmojiTab focused={focused} emoji="🔍" />,
                 }}
             />
 
@@ -82,9 +69,7 @@ export default function TabsLayout() {
                 options={{
                     title: "Profile",
                     headerShown: false,
-                    tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon={icons.person} title="Profile" />
-                    ),
+                    tabBarIcon: ({ focused }) => <EmojiTab focused={focused} emoji="👤" />,
                 }}
             />
         </Tabs>
