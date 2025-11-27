@@ -87,36 +87,23 @@ const Login = () => {
             <Image source={images.bg} className="absolute w-full h-full opacity-30" resizeMode="cover" />
 
             <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
-                <ScrollView
-                    className="flex-1 px-5"
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    <View className="mt-14 mb-10 items-center">
-                        <Text className="text-4xl font-bold text-text-primary">RateMy
-                            <Text className="text-neon-pink">Feet</Text>
+                <ScrollView className="flex-1 px-5" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+                    <View className="mt-20 mb-10 items-center">
+                        <Text className="text-center text-white text-4xl font-bold">Join the community 👣🔥</Text>
+                        <Text className="text-center text-text-secondary mt-3 text-base">
+                            Where your feet finally get the attention they deserve.
                         </Text>
-                        <Text className="text-4xl font-bold text-text-primary mt-2">🦶🔥</Text>
-                        <Text className="text-center text-text-primary text-2xl font-bold mt-6 leading-8">
-                            ARE YOUR FEET{"\n"}HOT OR NOT?
-                        </Text>
-                        <LinearGradient
-                            colors={["#36F1CD", "#4A90F7"]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            className="px-4 py-1 rounded-full mt-3"
-                        >
-                            <Text className="text-black font-bold text-lg">TikTok-ready neon vibes</Text>
-                        </LinearGradient>
                     </View>
 
                     <View className="bg-surface border border-border rounded-3xl p-5 shadow-xl shadow-[#FF4F9A33]">
-                        <Text className="text-center text-white text-4xl font-bold mb-2">
-                            Join the community 👣🔥
-                        </Text>
-                        <Text className="text-center text-text-secondary mb-6">
-                            Where your feet finally get the attention they deserve.
-                        </Text>
+                        <LinearGradient
+                            colors={["#FF4F9A", "#36F1CD", "#4A90F7"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            className="self-center px-5 py-2 rounded-full mb-5"
+                        >
+                            <Text className="text-black font-bold text-base">Hot or not? Let’s find out.</Text>
+                        </LinearGradient>
 
                         {mode === "register" && (
                             <TextInput
